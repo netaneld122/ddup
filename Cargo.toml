@@ -1,0 +1,17 @@
+[package]
+name = "ddup"
+version = "0.1.0"
+authors = ["netaneld122 <netaneld122@gmail.com>"]
+edition = "2018"
+
+[dependencies.winapi]
+version = "0.3"
+features = [
+    "std", 
+    "winuser", 
+    "winioctl", 
+    "ioapiset", 
+    "errhandlingapi",
+    "fileapi",
+    "handleapi",
+]
