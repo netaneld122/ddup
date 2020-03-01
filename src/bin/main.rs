@@ -1,12 +1,11 @@
-use ddup::ntfs;
-use std::ffi::CString;
+use ddup::ntfs::Ntfs;
+use ddup::volume::Volume;
 
 fn main() {
-    let path = CString::new(r"\\.\C:").unwrap();
-    let handle = ntfs::open_volume(&path).unwrap();
-
-    ntfs::create_usn_journal(handle).unwrap();
-    let journal = ntfs::query_usn_journal(handle).unwrap();
-
+    let volume = Volume::open(r"\\.\C:").unwrap();
+    volume.create_usn_journal().unwrap();
+    let journal = volume.query_usn_journal().unwrap();
     println!("Journal {:#?}", journal);
+    let data = volume.enum_usn_data(journal.LowestValidUsn, journal.NextUsn).unwrap();
+    println!("Journal {:#?}", data);
 }
