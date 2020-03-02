@@ -1,2 +1,5 @@
-pub mod ntfs;
-pub mod volume;
+mod ntfs;
+mod volume;
+
+pub use ntfs::Ntfs;
+pub use volume::Volume;
