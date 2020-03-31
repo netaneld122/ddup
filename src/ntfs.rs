@@ -63,18 +63,84 @@ pub struct UsnRecord {
     pub filename: String,
 }
 
-pub struct UsnData {
+pub struct UsnRange {
+    pub low: USN,
+    pub high: USN,
+}
+
+pub struct UsnRecordsIterator<'a> {
+    volume: &'a Volume,
     buffer: [u8; 0x10000],
+    reference_number: u64,
+    usn_range: &'a UsnRange,
     size: usize,
     offset: usize,
 }
 
-impl Iterator for UsnData {
+impl<'a> UsnRecordsIterator<'a> {
+    fn new(volume: &'a Volume, usn_range: &'a UsnRange) -> UsnRecordsIterator<'a> {
+        UsnRecordsIterator {
+            volume,
+            buffer: [0; 0x10000],
+            reference_number: 0,
+            usn_range,
+            size: 0,
+            offset: 0,
+        }
+    }
+}
+
+impl<'a> UsnRecordsIterator<'a> {
+    fn fetch(&mut self) -> Result<(), Error> {
+        let mut returned_bytes: u32 = 0;
+        let mft_enum_data = MFT_ENUM_DATA {
+            StartFileReferenceNumber: self.reference_number,
+            LowUsn: self.usn_range.low,
+            HighUsn: self.usn_range.high,
+        };
+
+        let res = unsafe {
+            DeviceIoControl(
+                self.volume.handle,
+                FSCTL_ENUM_USN_DATA,
+                &mft_enum_data as *const MFT_ENUM_DATA as LPVOID,
+                std::mem::size_of_val(&mft_enum_data) as DWORD,
+                self.buffer.as_mut_ptr() as *mut USN_RECORD as LPVOID,
+                self.buffer.len() as DWORD,
+                &mut returned_bytes as LPDWORD,
+                null_mut(),
+            )
+        };
+
+        if res != 0 {
+            self.reference_number = unsafe {
+                *(self.buffer.as_ptr() as *const u64)
+            };
+
+            self.size = returned_bytes as usize;
+            self.offset = std::mem::size_of_val(&self.reference_number);
+        }
+
+        match res {
+            0 => Err(Error::last_os_error()),
+            _ => Ok(()),
+        }
+    }
+}
+
+impl<'a> Iterator for UsnRecordsIterator<'a> {
     type Item = UsnRecord;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset >= self.size {
-            return None;
+            match self.fetch() {
+                Err(err) if Some(38) == err.raw_os_error() => {
+                    // EOF
+                    return None;
+                }
+                Err(err) => { panic!("Usn records iteration failed with {}", err); }
+                _ => ()
+            }
         }
 
         let base = self.buffer.as_ptr();
@@ -101,7 +167,7 @@ impl Iterator for UsnData {
 pub trait Ntfs {
     fn create_usn_journal(&self) -> Result<(), Error>;
     fn query_usn_journal(&self) -> Result<USN_JOURNAL_DATA, Error>;
-    fn enum_usn_data(&self, low: USN, high: USN) -> Result<UsnData, Error>;
+    fn iterate_usn_records<'a>(&'a self, range: &'a UsnRange) -> UsnRecordsIterator<'a>;
 }
 
 impl Ntfs for Volume {
@@ -109,7 +175,7 @@ impl Ntfs for Volume {
         let mut returned_bytes: u32 = 0;
         let input = CREATE_USN_JOURNAL_DATA {
             MaximumSize: 1024 * 1024 * 100,
-            AllocationDelta: 1024,
+            AllocationDelta: 1024 * 1024,
         };
 
         let res = unsafe {
@@ -154,39 +220,7 @@ impl Ntfs for Volume {
         }
     }
 
-    fn enum_usn_data(&self, low: USN, high: USN) -> Result<UsnData, Error> {
-        let mut returned_bytes: u32 = 0;
-        let mft_enum_data = MFT_ENUM_DATA {
-            StartFileReferenceNumber: 0,
-            LowUsn: low,
-            HighUsn: high,
-        };
-        let mut buffer = [0u8; 0x10000];
-
-        let res = unsafe {
-            DeviceIoControl(
-                self.handle,
-                FSCTL_ENUM_USN_DATA,
-                &mft_enum_data as *const MFT_ENUM_DATA as LPVOID,
-                std::mem::size_of_val(&mft_enum_data) as DWORD,
-                buffer.as_mut_ptr() as *mut USN_RECORD as LPVOID,
-                buffer.len() as DWORD,
-                &mut returned_bytes as LPDWORD,
-                null_mut(),
-            )
-        };
-
-        if res == 0 {
-            return Err(Error::last_os_error());
-        }
-
-        match res {
-            0 => Err(Error::last_os_error()),
-            _ => Ok(UsnData {
-                buffer,
-                offset: std::mem::size_of::<USN>(), // Skip USN header
-                size: returned_bytes as usize,
-            }),
-        }
+    fn iterate_usn_records<'a>(&'a self, usn_range: &'a UsnRange) -> UsnRecordsIterator<'a> {
+        UsnRecordsIterator::new(&self, usn_range)
     }
 }
