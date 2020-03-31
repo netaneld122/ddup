@@ -11,10 +11,15 @@ fn enumerate_mft_records() -> Result<(), std::io::Error> {
     let mut iterations = 0;
     let range = UsnRange {
         low: journal.LowestValidUsn,
-        high: journal.NextUsn };
+        high: journal.NextUsn,
+    };
 
     for record in volume.iterate_usn_records(&range) {
-        println!("{}", record.filename);
+        println!("{:x} {:x} {:?} `{}`",
+                 record.id,
+                 record.parent_id,
+                 record.record_type,
+                 record.filename);
 
         // Stop after a certain amount of iterations
         iterations = iterations + 1;

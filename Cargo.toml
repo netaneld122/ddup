@@ -15,4 +15,7 @@ features = [
     "fileapi",
     "handleapi",
     "handleapi",
+    "winnt",
+    "ntdef",
+    "minwindef",
 ]

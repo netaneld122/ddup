@@ -1,65 +1,27 @@
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
 use std::io::Error;
 use std::ptr::null_mut;
 
 use super::volume::Volume;
+use super::wdk_ntfs::{USN_JOURNAL_DATA, CREATE_USN_JOURNAL_DATA, MFT_ENUM_DATA, USN_RECORD};
 
-use winapi::shared::minwindef::{DWORD, LPDWORD, LPVOID, WORD};
-use winapi::shared::ntdef::{DWORDLONG, USN, WCHAR};
+use winapi::shared::minwindef::{DWORD, LPDWORD, LPVOID};
+use winapi::shared::ntdef::USN;
 use winapi::um::ioapiset::DeviceIoControl;
 use winapi::um::winioctl::{
     FSCTL_CREATE_USN_JOURNAL, FSCTL_ENUM_USN_DATA, FSCTL_QUERY_USN_JOURNAL,
 };
-use winapi::um::winnt::LARGE_INTEGER;
+use winapi::um::winnt::FILE_ATTRIBUTE_DIRECTORY;
 
-#[repr(C)]
-#[derive(Default, Debug)]
-pub struct USN_JOURNAL_DATA {
-    pub UsnJournalID: DWORDLONG,
-    pub FirstUsn: USN,
-    pub NextUsn: USN,
-    pub LowestValidUsn: USN,
-    pub MaxUsn: USN,
-    pub MaximumSize: DWORDLONG,
-    pub AllocationDelta: DWORDLONG,
-}
-
-#[repr(C)]
-#[derive(Default)]
-pub struct CREATE_USN_JOURNAL_DATA {
-    pub MaximumSize: DWORDLONG,
-    pub AllocationDelta: DWORDLONG,
-}
-
-#[repr(C)]
-#[derive(Default)]
-pub struct MFT_ENUM_DATA {
-    pub StartFileReferenceNumber: DWORDLONG,
-    pub LowUsn: USN,
-    pub HighUsn: USN,
-}
-
-#[repr(C)]
-pub struct USN_RECORD {
-    pub RecordLength: DWORD,
-    pub MajorVersion: WORD,
-    pub MinorVersion: WORD,
-    pub FileReferenceNumber: DWORDLONG,
-    pub ParentFileReferenceNumber: DWORDLONG,
-    pub Usn: USN,
-    pub TimeStamp: LARGE_INTEGER,
-    pub Reason: DWORD,
-    pub SourceInfo: DWORD,
-    pub SecurityId: DWORD,
-    pub FileAttributes: DWORD,
-    pub FileNameLength: WORD,
-    pub FileNameOffset: WORD,
-    pub FileName: [WCHAR; 1],
+#[derive(Debug)]
+pub enum UsnRecordType {
+    File,
+    Directory,
 }
 
 pub struct UsnRecord {
+    pub id: u64,
+    pub parent_id: u64,
+    pub record_type: UsnRecordType,
     pub filename: String,
 }
 
@@ -160,7 +122,19 @@ impl<'a> Iterator for UsnRecordsIterator<'a> {
         // Advance to next record
         self.offset += usn_record.RecordLength as usize;
 
-        Some(UsnRecord { filename })
+        let record_type =
+            if usn_record.FileAttributes & FILE_ATTRIBUTE_DIRECTORY != 0 {
+                UsnRecordType::Directory
+            } else {
+                UsnRecordType::File
+            };
+
+        Some(UsnRecord {
+            id: usn_record.FileReferenceNumber,
+            parent_id: usn_record.ParentFileReferenceNumber,
+            record_type,
+            filename,
+        })
     }
 }
 
