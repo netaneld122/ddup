@@ -1,8 +1,9 @@
-use ddup::DirList;
+use std::time::Instant;
+
+use ddup::algorithm;
 
 fn main() {
-    let dirlist = DirList::new("C:").unwrap();
-    for (i, path) in dirlist.iter().enumerate() {
-        println!("{:<8} {}", i, path.to_str().unwrap());
-    }
+    let i = Instant::now();
+    algorithm::doit();
+    println!("Finished in {} seconds", i.elapsed().as_secs_f32());
 }
