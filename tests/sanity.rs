@@ -14,7 +14,7 @@ fn enumerate_mft_records() -> Result<(), std::io::Error> {
         high: journal.NextUsn,
     };
 
-    for record in volume.iterate_usn_records(&range) {
+    for record in volume.usn_records(&range) {
         println!("{:x} {:x} {:?} `{}`",
                  record.id,
                  record.parent_id,

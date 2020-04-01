@@ -143,7 +143,7 @@ impl<'a> Iterator for UsnRecordsIterator<'a> {
 pub trait Ntfs {
     fn create_usn_journal(&self) -> Result<(), Error>;
     fn query_usn_journal(&self) -> Result<USN_JOURNAL_DATA, Error>;
-    fn iterate_usn_records<'a>(&'a self, range: &'a UsnRange) -> UsnRecordsIterator<'a>;
+    fn usn_records<'a>(&'a self, range: &'a UsnRange) -> UsnRecordsIterator<'a>;
 }
 
 impl Ntfs for Volume {
@@ -196,7 +196,7 @@ impl Ntfs for Volume {
         }
     }
 
-    fn iterate_usn_records<'a>(&'a self, usn_range: &'a UsnRange) -> UsnRecordsIterator<'a> {
+    fn usn_records<'a>(&'a self, usn_range: &'a UsnRange) -> UsnRecordsIterator<'a> {
         UsnRecordsIterator::new(&self, usn_range)
     }
 }
