@@ -1,6 +1,6 @@
 mod ntfs;
 mod volume;
-mod wdk_ntfs;
+mod winioctl;
 
 pub use ntfs::Ntfs;
 pub use ntfs::{UsnRange, UsnRecordType, UsnRecord};

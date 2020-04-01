@@ -2,7 +2,7 @@ use std::io::Error;
 use std::ptr::null_mut;
 
 use super::volume::Volume;
-use super::wdk_ntfs::{USN_JOURNAL_DATA, CREATE_USN_JOURNAL_DATA, MFT_ENUM_DATA, USN_RECORD};
+use super::winioctl::{USN_JOURNAL_DATA, CREATE_USN_JOURNAL_DATA, MFT_ENUM_DATA, USN_RECORD};
 
 use winapi::shared::minwindef::{DWORD, LPDWORD, LPVOID};
 use winapi::shared::ntdef::USN;
