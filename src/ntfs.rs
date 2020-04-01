@@ -30,9 +30,11 @@ pub struct UsnRange {
     pub high: USN,
 }
 
+const BUFFER_SIZE: usize = 1024 * 64;
+
 pub struct UsnRecordsIterator<'a> {
     volume: &'a Volume,
-    buffer: [u8; 0x10000],
+    buffer: [u8; BUFFER_SIZE],
     reference_number: u64,
     usn_range: &'a UsnRange,
     size: usize,
@@ -43,7 +45,7 @@ impl<'a> UsnRecordsIterator<'a> {
     fn new(volume: &'a Volume, usn_range: &'a UsnRange) -> UsnRecordsIterator<'a> {
         UsnRecordsIterator {
             volume,
-            buffer: [0; 0x10000],
+            buffer: [0; BUFFER_SIZE],
             reference_number: 0,
             usn_range,
             size: 0,
