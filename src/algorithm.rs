@@ -1,8 +1,9 @@
 use std::fs;
 use std::io::{self, Seek, Read};
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::cmp::min;
+use std::ops::FnMut;
 
 use crc::{crc32, Hasher32};
 
@@ -52,13 +53,14 @@ fn reduce_by_crc<'a>(size: u64, paths: &[&'a Path]) -> Vec<Vec<&'a Path>> {
     map.values().cloned().collect()
 }
 
-pub fn doit() {
-    let dirlist = DirList::new("G:").unwrap();
+pub fn run<P>(drive: &str, filter: P)
+    where P: FnMut(&&PathBuf) -> bool {
+    let dirlist = DirList::new(drive).unwrap();
 
     // Group files by size
     let mut map: HashMap<u64, Vec<&Path>> = HashMap::new();
 
-    for path in dirlist.iter() {
+    for path in dirlist.iter().filter(filter) {
         let file_size = match fs::metadata(path) {
             Ok(m) => m.len(),
             _ => continue
