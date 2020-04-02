@@ -1,6 +1,8 @@
 [package]
 name = "ddup"
 version = "0.0.1-alpha"
+description = "Tool that detects potentially duplicated files in Windows NTFS volumes"
+license-file = "LICENSE.txt"
 authors = ["netaneld122"]
 edition = "2018"
 
