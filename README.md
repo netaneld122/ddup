@@ -37,7 +37,7 @@ cargo install ddup --version 0.0.2-alpha
 
 Install from repository:
 ```shell script
-cargo install --path .
+cargo install --git https://github.com/netaneld122/ddup
 ```
 
 ## Implementation
