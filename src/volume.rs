@@ -20,7 +20,7 @@ impl Drop for Volume {
 }
 
 impl Volume {
-    pub fn open(name: &str) -> Result<Volume, Error> {
+    pub fn open(name: &str) -> Result<Self, Error> {
         let name = CString::new(name).unwrap();
         let handle = unsafe {
             CreateFileA(

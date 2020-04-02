@@ -20,16 +20,16 @@ fn reduce_by_crc<'a>(size: u64, paths: &[&'a Path]) -> Vec<Vec<&'a Path>> {
         };
 
         let mut digest = crc32::Digest::new(crc32::IEEE);
+        let mut buffer = [0u8; 1024 * 4];
 
         // Seek to beginning
-        let mut buffer = [0u8; 1024 * 4];
         file.seek(io::SeekFrom::Start(0)).unwrap();
         file.read(&mut buffer).unwrap();
         digest.write(&mut buffer);
 
         if size > buffer.len() as u64 * 2 {
             // Seek to the middle
-            file.seek(io::SeekFrom::Start(size / 2)).unwrap();
+            file.seek(io::SeekFrom::Start(size / 2 - buffer.len() as u64 / 2)).unwrap();
             file.read(&mut buffer).unwrap();
             digest.write(&mut buffer);
 

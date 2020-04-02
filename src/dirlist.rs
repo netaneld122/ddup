@@ -11,7 +11,7 @@ pub struct DirList {
 }
 
 impl DirList {
-    pub fn new(drive: &str) -> Result<DirList, Error> {
+    pub fn new(drive: &str) -> Result<Self, Error> {
         let volume = Volume::open(&(String::from(r"\\.\") + drive))?;
 
         let journal = volume.query_usn_journal()?;

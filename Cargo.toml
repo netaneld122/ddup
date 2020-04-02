@@ -1,7 +1,7 @@
 [package]
 name = "ddup"
-version = "0.1.0"
-authors = ["netaneld122 <netaneld122@gmail.com>"]
+version = "0.0.1-alpha"
+authors = ["netaneld122"]
 edition = "2018"
 
 [dependencies.winapi]
@@ -25,3 +25,6 @@ version = "1.8.1"
 
 [dependencies.clap]
 version = "2.33.0"
+
+[dependencies.glob]
+version = "0.3.0"
