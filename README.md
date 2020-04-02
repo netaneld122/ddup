@@ -1,5 +1,7 @@
 # ddup
 
+![](https://github.com/netaneld122/ddup/workflows/Rust/badge.svg)
+
 `ddup` (**D**etect **Dup**licates) is an extremely fast tool that identifies potentially duplicated files in 
 [Windows NTFS Volumes](https://en.wikipedia.org/wiki/NTFS).
 
