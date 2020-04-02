@@ -30,7 +30,7 @@ Finished in 7.5456786 seconds
 
 ## Installation
 
-Install from crates.io *(Not yet available)*
+Install from crates.io:
 ```shell script
 cargo install ddup
 ```
