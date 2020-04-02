@@ -32,7 +32,7 @@ Finished in 7.5456786 seconds
 
 Install from crates.io:
 ```shell script
-cargo install ddup
+cargo install ddup --version 0.0.2-alpha
 ```
 
 Install from repository:
