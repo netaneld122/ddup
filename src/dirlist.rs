@@ -37,3 +37,47 @@ impl DirList {
         self.paths.iter()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use walkdir;
+    use std::time::Instant;
+    use std::collections::HashSet;
+
+    #[test]
+    fn compare_walkdir_to_dirlist() {
+        println!("What is this\r\n");
+        let instant = Instant::now();
+        let mut v1 = Vec::new();
+        for p in walkdir::WalkDir::new(r"G:\") {
+            if let Ok(d) = p {
+                if d.file_type().is_file() {
+                    v1.push(String::from(d.path().to_str().unwrap()));
+                }
+            }
+        }
+        println!("WalkDir got {} entries in {} seconds", v1.len(), instant.elapsed().as_secs_f32());
+
+        let instant = Instant::now();
+        let mut v2 = Vec::new();
+        let dirlist = DirList::new("G:").unwrap();
+        for p in dirlist.iter() {
+            v2.push(String::from(p.to_str().unwrap()));
+        }
+        println!("Dirlist got {} entries in {} seconds", v2.len(), instant.elapsed().as_secs_f32());
+
+        let set1: HashSet<String> = v1.iter().cloned().map(|s|s.to_lowercase()).collect();
+        let set2: HashSet<String> = v2.iter().cloned().map(|s|s.to_lowercase()).collect();
+
+        println!("a - b:");
+        for diff in set1.difference(&set2).into_iter().take(100) {
+            println!("\t{}", diff);
+        }
+
+        println!("b - a:");
+        for diff in set2.difference(&set1).into_iter().take(10) {
+            println!("\t{}", diff);
+        }
+    }
+}

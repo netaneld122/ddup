@@ -4,8 +4,13 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::cmp::min;
 use std::ops::FnMut;
+use std::time::Instant;
 
 use crc::{crc32, Hasher32};
+
+use indicatif::ProgressBar;
+
+use rayon::prelude::*;
 
 use super::DirList;
 
@@ -79,17 +84,27 @@ fn reduce_by_content<'a>(size: u64, paths: &[&'a Path], comparison: &Comparison)
     map.values().cloned().collect()
 }
 
-pub fn run<P>(drive: &str, filter: P, comparison: &Comparison)
+pub fn run<P>(drive: &str, filter: P, comparison: Comparison)
     where P: FnMut(&&PathBuf) -> bool {
+    let instant = Instant::now();
 
-    println!("Generating recursive dirlist");
+    println!("[1/3] Generating recursive dirlist");
+
     let dirlist = DirList::new(drive).unwrap();
+    let paths: Vec<&PathBuf> = dirlist.iter().filter(filter).collect();
 
-    println!("Grouping by file size");
+    println!("Finished in {} seconds", instant.elapsed().as_secs_f32());
+
+    let instant = Instant::now();
+
+    println!("[2/3] Grouping by file size");
+
     // Group files by size
-    let mut map: HashMap<u64, Vec<&Path>> = HashMap::new();
+    let mut map: HashMap<u64, Vec<&Path>> = HashMap::with_capacity(paths.len());
+    let progress = ProgressBar::new(paths.len() as u64);
 
-    for path in dirlist.iter().filter(filter) {
+    for path in paths.into_iter() {
+        progress.inc(1);
         let file_size = match fs::metadata(path) {
             Ok(m) => m.len(),
             _ => continue
@@ -99,22 +114,33 @@ pub fn run<P>(drive: &str, filter: P, comparison: &Comparison)
             .or_insert(Vec::new())
             .push(path);
     }
+    progress.finish();
 
     // Filter out single occurrences
     map = map.into_iter()
         .filter(|(_, v)| v.len() > 1)
         .collect();
 
-    println!("Grouping by hash");
+    println!("Finished in {} seconds", instant.elapsed().as_secs_f32());
+
+    let instant = Instant::now();
+
+    println!("[3/3] Grouping by hash in thread pool");
+
     // Print all duplicates
-    let mut i = 0;
-    for (size, same_size_paths) in map.into_iter() {
-        for same_crc_paths in reduce_by_content(size, &same_size_paths, comparison).into_iter() {
+    let keys: Vec<u64> = map.keys().cloned().collect();
+    // Iterate through size groups simultaneously
+    keys.par_iter().for_each(|size: &u64| {
+        let same_size_paths = &map[size];
+        for same_crc_paths in reduce_by_content(*size,
+                                                &same_size_paths,
+                                                &comparison).into_iter() {
             println!("Potential duplicates [{} bytes]", size);
             for path in same_crc_paths {
-                i += 1;
-                println!("\t{} {}", i, path.to_str().unwrap());
+                println!("\t{}", path.to_str().unwrap());
             }
         }
-    }
+    });
+
+    println!("Finished in {} seconds", instant.elapsed().as_secs_f32());
 }

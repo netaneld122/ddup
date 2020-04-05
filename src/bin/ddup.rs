@@ -62,12 +62,12 @@ fn main() {
             Pattern::new(pattern)
                 .expect("Illegal matcher syntax")
                 .matches_path_with(&path.as_path(), options),
-                       &comparison,
+                       comparison,
         );
     } else {
         println!("Scanning drive {} [{:?} comparison]", drive, comparison);
-        algorithm::run(drive, |_| true, &comparison);
+        algorithm::run(drive, |_| true, comparison);
     }
 
-    println!("Finished in {} seconds", instant.elapsed().as_secs_f32());
+    println!("Overall finished in {} seconds", instant.elapsed().as_secs_f32());
 }
