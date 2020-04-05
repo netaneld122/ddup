@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::cmp::min;
 use std::ops::FnMut;
 use std::time::Instant;
+use std::sync::{Mutex};
 
 use crc::{crc32, Hasher32};
 
@@ -128,6 +129,7 @@ pub fn run<P>(drive: &str, filter: P, comparison: Comparison)
     println!("[3/3] Grouping by hash in thread pool");
 
     // Print all duplicates
+    let stdout_mutex = Mutex::new(0);
     let keys: Vec<u64> = map.keys().cloned().collect();
     // Iterate through size groups simultaneously
     keys.par_iter().for_each(|size: &u64| {
@@ -135,6 +137,7 @@ pub fn run<P>(drive: &str, filter: P, comparison: Comparison)
         for same_crc_paths in reduce_by_content(*size,
                                                 &same_size_paths,
                                                 &comparison).into_iter() {
+            let _guard = stdout_mutex.lock();
             println!("Potential duplicates [{} bytes]", size);
             for path in same_crc_paths {
                 println!("\t{}", path.to_str().unwrap());

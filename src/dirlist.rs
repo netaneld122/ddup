@@ -50,7 +50,7 @@ mod tests {
         println!("What is this\r\n");
         let instant = Instant::now();
         let mut v1 = Vec::new();
-        for p in walkdir::WalkDir::new(r"G:\") {
+        for p in walkdir::WalkDir::new(r"C:\") {
             if let Ok(d) = p {
                 if d.file_type().is_file() {
                     v1.push(String::from(d.path().to_str().unwrap()));
@@ -61,7 +61,7 @@ mod tests {
 
         let instant = Instant::now();
         let mut v2 = Vec::new();
-        let dirlist = DirList::new("G:").unwrap();
+        let dirlist = DirList::new("C:").unwrap();
         for p in dirlist.iter() {
             v2.push(String::from(p.to_str().unwrap()));
         }
