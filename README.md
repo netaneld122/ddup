@@ -50,7 +50,7 @@ This tool is written in [Rust](https://www.rust-lang.org/) .
 `ddup` obtains a recursive dirlist by leveraging the [NTFS USN Journal](https://en.wikipedia.org/wiki/USN_Journal) mechanism 
 in order to read USN records for [MFT](https://en.wikipedia.org/wiki/NTFS#Master_File_Table) (**M**aster **F**ile **T**able) entries.  
 
-Windows USN Records can This functionality is available via the following `IOCTL`s:
+Windows USN Records can be fetched via the following `IOCTL`s:
 * [`FSCTL_ENUM_USN_DATA`](https://docs.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_enum_usn_data)
 * [`FSCTL_QUERY_USN_JOURNAL`](https://docs.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_query_usn_journal)
 
