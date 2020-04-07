@@ -5,6 +5,8 @@
 `ddup` (**D**etect **Dup**licates) is an extremely fast tool that identifies potentially duplicated files in 
 [Windows NTFS Volumes](https://en.wikipedia.org/wiki/NTFS).
 
+Note that since the Journal is limited in size, not **all** duplicated files will be found.
+
 ## Usage
  
 #### Scan C: recursively 
